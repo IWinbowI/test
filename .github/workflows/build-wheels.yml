@@ -1,4 +1,4 @@
-name: Build Wheels (Windows & Linux)
+name: Build Windows Wheels
 
 on:
   push:
@@ -6,8 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-windows:
-    name: Windows (win_amd64)
+  build-wheels:
     runs-on: windows-latest
     steps:
       - name: Checkout repository
@@ -22,44 +21,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip setuptools wheel
 
-      - name: Generate Windows Wheels
+      - name: Generate Wheels
         run: |
           mkdir wheels
           pip wheel -r requirements.txt -w ./wheels
 
-      - name: Upload Windows Wheels
+      - name: Upload Wheels Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows-amd64-wheels-py312
-          path: ./wheels/
-
-  build-linux:
-    name: Linux (manylinux2014_x86_64)
-    runs-on: ubuntu-latest
-    container:
-      image: quay.io/pypa/manylinux2014_x86_64
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Generate Linux Wheels
-        run: |
-          mkdir temp_wheels wheels
-          
-          # Build wheels using Python 3.12 pre-installed inside the container
-          /opt/python/cp312-cp312/bin/pip wheel -r requirements.txt -w ./temp_wheels
-          
-          # Audit and repair compiled wheels to ensure manylinux2014 tag compliance
-          for whl in ./temp_wheels/*.whl; do
-            if auditwheel show "$whl" > /dev/null 2>&1; then
-              auditwheel repair "$whl" -w ./wheels/
-            else
-              cp "$whl" ./wheels/
-            fi
-          done
-
-      - name: Upload Linux Wheels
-        uses: actions/upload-artifact@v4
-        with:
-          name: manylinux2014-amd64-wheels-py312
+          name: windows-amd64-wheels
           path: ./wheels/
